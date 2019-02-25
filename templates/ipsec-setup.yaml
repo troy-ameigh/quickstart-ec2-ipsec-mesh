@@ -30,10 +30,10 @@ Metadata:
         default: IPSec Mesh Configuration
       Parameters:
       - VpcId
-      - S3CaBucket
       - S3UserCertsBucket
       - UseLocalShellScript
       - ExistingEC2RoleArn
+      - S3CaBucket
     - Label:
         default: AWS Quick Start configuration
       Parameters:
@@ -58,15 +58,9 @@ Metadata:
 
 Parameters:
 
-  S3CaBucket:
-    Type: String
-    Description: (Optional) CA bucket with CA key and certificate. Keys are constant ca.cert.pem and ce.key.encrypted.pem.
-                 Password must be provided and encrypted in Lambda env parameters. If left blank, certificates will be generated.
-    Default: ''
-
   S3UserCertsBucket:
     Type: String
-    Description: User certs bucket where the cert will be published.
+    Description: (Optional) User certs bucket where the cert will be published. If you leave it empty it will be generated
     Default: ''
 
   UseLocalShellScript:
@@ -113,6 +107,12 @@ Parameters:
     Description: (Optional) Existing Arn of EC2 Role to be allowed to decrypt host certificate with CMS.
     Default: ''
 
+  S3CaBucket:
+    Type: String
+    Description: (Optional) CA bucket name. If left empty, CA key and certificate will be generated and bucket created (default). If not empty, you need to configre CA manually. 
+                 Keys are constant ca.cert.pem and ce.key.encrypted.pem. Password must be provided and encrypted in Lambda env parameters. 
+    Default: ''
+
 Conditions:
 
   CreateCaS3Bucket: 
@@ -135,6 +135,13 @@ Conditions:
         - ''
         - !Ref 'ExistingEC2RoleArn'
 
+  GenerateCA: !And
+    - !Equals
+        - ''
+        - !Ref 'S3CaBucket'
+    - !Equals
+        - !Ref 'UseLocalShellScript'
+        - 'no'
 Resources:
 
   ResS3ConfigsBucket:
@@ -292,7 +299,7 @@ Resources:
                   cfnresponse.send(event, context, status, {}, None)
 
   CaGenerateRole:
-    Condition: CreateQSHelpers
+    Condition: GenerateCA 
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -337,7 +344,7 @@ Resources:
                 Resource: '*'
 
   CaGenerateFunction:
-    Condition: CreateQSHelpers
+    Condition: GenerateCA 
     DependsOn:
       - CaKmsKey
       - generateCertificateBundle 
@@ -354,7 +361,7 @@ Resources:
         S3Key: !Sub '${QSS3KeyPrefix}functions/packages/ca_initialize_lambda_function/ca_initialize_lambda_function.zip'
 
   CaGenerate:
-    Condition: CreateQSHelpers
+    Condition: GenerateCA
     Type: AWS::CloudFormation::CustomResource
     Properties:
       ServiceToken: !GetAtt 'CaGenerateFunction.Arn'
