@@ -52,7 +52,7 @@ Metadata:
       S3CaBucket:
         default: CA S3 bucket
       S3UserCertsBucket:
-        default: User Certs S3 bucket
+        default: Host Certs S3 bucket
       UseLocalShellScript:
         default: Use setup shell script
 
