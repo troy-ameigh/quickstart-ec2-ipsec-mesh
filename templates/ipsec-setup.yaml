@@ -58,14 +58,19 @@ Metadata:
 
 Parameters:
 
+  S3CaBucket:
+    Type: String
+    Description: (Optional) An existing S3 bucket for the CA certificate and key. If you leave this parameter empty, the Quick Start will generate a CA key and certificate and will place them in a new S3 bucket. If you specify an existing bucket name, you must configure CA manually and name your certificate as ca.cert.pem and encrypted key as ca.key.encrypted.pem. You must provide the password and encrypt it in Amazon Lambda environment variables.
+    Default: ''
+
   S3UserCertsBucket:
     Type: String
-    Description: (Optional) User certs bucket where the cert will be published. If you leave it empty it will be generated
+    Description: (Optional) An existing S3 bucket where the hosts certificate for EC2 instances will be published. If you leave this parameter empty, the Quick Start will create a new S3 bucket for this purpose.
     Default: ''
 
   UseLocalShellScript:
     Type: String
-    Description: Choose yes to deploy this solution using provided script aws_setup.py instead of launching CloudFormation stack directly.
+    Description: Choose yes to deploy this architecture by using the provided script aws_setup.py instead of launching the CloudFormation stack directly. You may choose to use the script for advanced configuration such as generating CA key on your machine using local crypto engine, performing backup of the key, and controlling the S3 bucket names.
     Default: 'no'
     AllowedValues: 
       - 'yes'
@@ -99,18 +104,12 @@ Parameters:
 
   VpcId:
     Type: String
-    Description: (Optional) ID of the existing VPC that the IP Sec setup should be restricted to.
+    Description: (Optional) The ID of your existing VPC that the IPsec setup should be restricted to. By default, the Quick Start will attempt to configure IPsec across all Amazon EC2 instances in your account. If you are not using the default VPC, then we recommend that you specify this value to limit the scope of the Quick Start to your target VPC where the EC2 IPsec mesh will be provisioned.
     Default: 'any'
 
   ExistingEC2RoleArn:
     Type: String
-    Description: (Optional) Existing Arn of EC2 Role to be allowed to decrypt host certificate with CMS.
-    Default: ''
-
-  S3CaBucket:
-    Type: String
-    Description: (Optional) CA bucket name. If left empty, CA key and certificate will be generated and bucket created (default). If not empty, you need to configre CA manually. 
-                 Keys are constant ca.cert.pem and ce.key.encrypted.pem. Password must be provided and encrypted in Lambda env parameters. 
+    Description: (Optional) The existing Amazon Resource Name (ARN) of the EC2 role that will be allowed to decrypt the host certificate with CMK.
     Default: ''
 
 Conditions:
