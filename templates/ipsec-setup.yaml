@@ -27,7 +27,7 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
     - Label:
-        default: IPSec Mesh Configuration
+        default: IPSec Mesh configuration
       Parameters:
       - VpcId
       - S3UserCertsBucket
@@ -42,7 +42,7 @@ Metadata:
 
     ParameterLabels:
       ExistingEC2RoleArn:
-        default: EC2 role ARN
+        default: Amazon EC2 role ARN
       VpcId:
         default: VPC ID
       QSS3BucketName:
@@ -52,7 +52,7 @@ Metadata:
       S3CaBucket:
         default: CA S3 bucket
       S3UserCertsBucket:
-        default: Host Certs S3 bucket
+        default: Host certificate S3 bucket
       UseLocalShellScript:
         default: Use setup shell script
 
@@ -60,7 +60,7 @@ Parameters:
 
   S3CaBucket:
     Type: String
-    Description: (Optional) An existing S3 bucket for the CA certificate and key. If you leave this parameter empty, the Quick Start will generate a CA key and certificate and will place them in a new S3 bucket. If you specify an existing bucket name, you must configure CA manually and name your certificate as ca.cert.pem and encrypted key as ca.key.encrypted.pem. You must provide the password and encrypt it in Amazon Lambda environment variables.
+    Description: (Optional) An existing S3 bucket for the CA certificate and key. If you leave this parameter empty, the Quick Start will generate a CA key and certificate and will place them in a new S3 bucket. If you specify an existing bucket name, you must configure CA manually and name your certificate as ca.cert.pem and encrypted key as ca.key.encrypted.pem. You must provide the password and encrypt it in Lambda environment variables.
     Default: ''
 
   S3UserCertsBucket:
@@ -70,7 +70,7 @@ Parameters:
 
   UseLocalShellScript:
     Type: String
-    Description: Choose yes to deploy this architecture by using the provided script aws_setup.py instead of launching the CloudFormation stack directly. You may choose to use the script for advanced configuration such as generating CA key on your machine using local crypto engine, performing backup of the key, and controlling the S3 bucket names.
+    Description: Choose yes to deploy this architecture by using the provided script aws_setup.py instead of launching the CloudFormation stack directly. You might choose to use the script for advanced configuration such as generating a CA key on your machine using a local crypto engine, performing backup of the key, and controlling the S3 bucket names.
     Default: 'no'
     AllowedValues: 
       - 'yes'
