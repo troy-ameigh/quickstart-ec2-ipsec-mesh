@@ -783,6 +783,18 @@ Resources:
          - !Ref Alerts
 
 Outputs:
+    IPsecSetupLambda:
+       Description: Name of the IPsec setup Lambda function
+       Value: !Ref IPSecSetupLambda
+    IssueCertificateLambda:
+       Description: Name of the Issue certificate Lambda function
+       Value: !Ref generateCertificateBundle
+    ReEnrollLambda:
+       Description: Name of the re-enroll certificate Lambda function
+       Value: !Ref enrollCertLambda
+    GenerateCALambda:
+       Description: Name of the Generate CA certificates Lambda function
+       Value: !Ref generateCertificateBundle
     CertEnrollLambda:
        Description: ARN of Lambda for certificate generation 
        Value: !GetAtt generateCertificateBundle.Arn
