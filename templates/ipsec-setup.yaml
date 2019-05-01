@@ -795,7 +795,7 @@ Outputs:
     GenerateCALambda:
        Condition: GenerateCA
        Description: Name of the Generate CA certificates Lambda function
-       Value: !Ref CaGenerate
+       Value: !Ref CaGenerateFunction
     IssueCertificateLambdaARN:
        Description: ARN of Lambda for certificate generation 
        Value: !GetAtt generateCertificateBundle.Arn
