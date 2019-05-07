@@ -8,7 +8,7 @@ IPsec is a protocol for in-transit data protection between hosts. The manual con
 
 The Quick Start sets up an environment that automates the configuration of opportunistic IPsec when EC2 instances are launched. It also generates instance certificates with weekly re-enrollment, sets up IPsec monitoring metrics in Amazon CloudWatch, and configures alarms and notifications through CloudWatch and Amazon Simple Notification Service (Amazon SNS).
 
-The Quick Start is automated by an AWS CloudFormation template that sets up the opportunistic IPsec mesh environment in about 5 minutes. The implementation uses Libreswan, an open-source implementation of IPsec encryption and Internet Key Exchange (IKE) version 2.
+The Quick Start is automated by an AWS CloudFormation template that sets up the opportunistic IPsec mesh environment in about 5 minutes. The implementation uses [Libreswan](https://libreswan.org/), an open-source implementation of IPsec encryption and Internet Key Exchange (IKE) version 2.
 
 ![Quick Start architecture for opportunistic IPsec mesh on AWS](https://d0.awsstatic.com/partner-network/QuickStart/datasheets/ipsec-mesh-on-aws-architecture.png)
 
