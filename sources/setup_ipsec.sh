@@ -51,6 +51,7 @@ install_certificate () {
 		echo "Error: Failed to install certifcate"
 		exit 5
 	fi
+	rm -fr ./cert.p12
 	echo "certificate installed successful"
 }
 
