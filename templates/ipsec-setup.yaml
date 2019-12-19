@@ -238,7 +238,7 @@ Resources:
       FunctionName: !Sub "CopyZipsFunction-${AWS::StackName}"
       Description: Copies objects from a source S3 bucket to a destination
       Handler: index.handler
-      Runtime: python2.7
+      Runtime: python3.8
       #      Role: !GetAtt 'CopyZipsRole.Arn'
       Role: !Join
          - ''
