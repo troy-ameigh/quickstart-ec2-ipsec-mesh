@@ -1,0 +1,26 @@
+This Partner Solution reference deployment guide provides step-by-step instructions for deploying an opportunistic Internet Protocol Security (IPsec) mesh that sets up dynamic IPsec tunnels between your Amazon Elastic Compute Cloud (Amazon EC2) instances. The implementation uses https://libreswan.org/[Libreswan], an open-source implementation of IPsec encryption and Internet Key Exchange (IKE) version 2. Using opportunistic IPsec, you can set up an IPsec mesh for a large number of hosts by using a simple and uniform configuration that does not need to change when you add or remove hosts.
+
+The Partner Solution builds an architecture that delivers the following benefits on the AWS Cloud:
+
+* Automatic configuration of opportunistic IPsec when EC2 instances are launched.
+* Generation of instance certificates and weekly re-enrollment.
+* IPsec monitoring metrics in Amazon CloudWatch for each EC2 instance.
+* Alarms and notifications through CloudWatch and Amazon Simple Notification Service (Amazon SNS) in case of IPsec setup or certificate re-enrollment failures.
+* An initial generation of a certificate authority (CA) root key if needed, including AWS Identity and Access Management (IAM) policies and two customer master keys (CMKs) that will protect the CA key and instance key.
+
+=== Opportunistic IPsec on AWS
+
+IPsec is a protocol for in-transit data protection between hosts. The configuration of site-to-site IPsec between multiple hosts can be an error-prone and intensive task. If you need to protect _n_ EC2 instances, you need a full mesh of _n_*(_n_-1) IPsec tunnels (Encapsulating Security Payload Security Association, or ESP SA). You must manually propagate every IP change to all instances, update credentials and configuration, and integrate monitoring and metrics into the operation. The effort required to keep the full-mesh parameters in sync is enormous.
+
+Full-mesh IPsec, known as _any-to-any IPsec_, builds an underlying network layer that protects application communication for these common use cases:
+
+* You’re migrating legacy applications to AWS, and they don’t support encryption. Examples of protocols without encryption are File Transfer Protocol (FTP), Hypertext Transfer Protocol (HTTP), and Lightweight Directory Access Protocol (LDAP).
+* You’re offloading protection to IPsec to take advantage of fast Linux kernel encryption and automated certificate management. The Partner Solution focuses on this use case.
+* You want to segregate duties between your application development and infrastructure security teams.
+* You want to protect container or application communication that leaves an EC2 instance.
+
+The following features are out of scope for this Partner Solution:
+
+* This Partner Solution deployment doesn’t deliver IPsec protection between EC2 instances and hosts that are on premises, or between EC2 instances and managed AWS components such as https://aws.amazon.com/elasticloadbalancing/[Elastic Load Balancing], http://aws.amazon.com/rds[Amazon Relational Database Service] (Amazon RDS), or https://aws.amazon.com/kinesis/[Amazon Kinesis].
+* Your EC2 instances must have general IP connectivity that allows network access control lists (network ACLs) and security groups.
+* This deployment cannot deliver extra connectivity, unlike VPC peering or a https://aws.amazon.com/blogs/aws/aws-solution-transit-vpc/[transit VPC].

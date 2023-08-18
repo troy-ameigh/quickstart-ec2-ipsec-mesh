@@ -1,0 +1,29 @@
+:xrefstyle: short
+
+The Partner Solution sets up the following serverless architecture to provision IPsec mesh between your EC2 instances, optionally restricting it to a VPC:
+
+* Three AWS Lambda functions: for issuing a certificate, for setting up IPsec on an EC2 instance, and for re-enrolling certificates. Additionally, if you don’t have a pre-existing CA certificate and key, the Quick Start uses a fourth Lambda function to generate a CA certificate and to store it in a new S3 bucket.
+* Two customer master keys (CMKs): for protecting the CA key and for protecting the host key in transit.
+* Three S3 buckets: for IPsec configuration, for the CA certificate and key, and for the host key.
+* A CloudWatch event upon launching the EC2 instance, and a scheduled weekly event for re-enrollment.
+* A CloudWatch alarm that watches for IPsec configuration failures, and an Amazon SNS topic that you can subscribe to, in order to receive notifications.
+
+// Replace this example diagram with your own. Follow our wiki guidelines: https://w.amazon.com/bin/view/AWS_Quick_Starts/Process_for_PSAs/#HPrepareyourarchitecturediagram. Upload your source PowerPoint file to the GitHub {deployment name}/docs/images/ directory in its repository.
+
+[#architecture1]
+.IPsec mesh on AWS
+image::../docs/deployment_guide/images/image1.png[Architecture]
+
+As shown in <<architecture1>>, this Partner Solution sets up the following:
+
+* An EC2 instance launch triggers a CloudWatch event, which launches an _IPsec setup_ Lambda function.
+* The _IPsec setup_ function checks whether the EC2 instance has the tag IPSec:todo. If the tag is present, the Lambda function calls the _Issue certificate_ Lambda function.
+* The _Issue certificate_ Lambda function downloads the encrypted CA certificate and key.
+* The _Issue certificate_ Lambda function decrypts the CA key with a customer master key (CMK).
+* The _Issue certificate_ Lambda function issues a host certificate to the EC2 instance. It encrypts the host certificate and key with an AWS Key Management Service (AWS KMS) generated random secret in a PKCS #12 structure. The secret is envelope-encrypted with a dedicated CMK.
+* The _Issue certificate_ Lambda function publishes the issued certificates to your dedicated S3 bucket for documentation.
+* The _IPsec setup_ Lambda function calls and runs the installation via AWS Systems Manager.
+* The installation downloads the configuration and installs the AWS SDK for Python (boto3), Libreswan, and curl if needed.
+* The EC2 instance decrypts the host key with the dedicated CMK and installs it in the IPsec database.
+* A weekly scheduled event triggers re-enrollment of the certificates via the _Re-enroll certificate_ Lambda function.
+* The _re-enroll certificate_ Lambda function triggers the _IPsec setup_ Lambda function (call event type: execution). The _IPsec setup_ function renews the certificate only, leaving the rest of the configuration untouched.
