@@ -1,0 +1,144 @@
+// Include any postdeployment steps here, such as steps necessary to test that the deployment was successful. If there are no postdeployment steps, leave this file empty.
+
+== Postdeployment steps
+
+* Use the URLs displayed in the *Outputs* tab for the stack to view the resources that were created.
+
+[#postdeploy1]
+.CloudFormation stack outputs
+image::../docs/deployment_guide/images/image3.png[Postdeploy]
+
+=== Step 3. Configure the IPsec network
+
+*Note* The default network configuration used by the Ipsec mesh Quick Start matches the configuration of a https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html[default VPC]. If you are using your default VPC, skip this step.
+
+The required Libreswan configuration for IPsec and the network is stored in an S3 bucket (shown as *ConfigSourcesS3Bucket* in the *Outputs* tab). If you need to change the configuration, download the following files from this S3 bucket, edit them with your favorite text editor to match your network setup, and then re-upload them to the S3 bucket:
+
+* config/private should contain all networks that require IPsec protection, such as EC2 instances that should be communicated with only through IPsec. All these hosts must have IPsec installed.
+* config/private-or-clear should contain networks with optional IPsec protection. However, these networks will start with IPsec protection and allow a fallback to unprotected (clear) when the IPsec negotiation fails.
+* config/clear-or-private should contain networks that do not, by default, attempt to add IPsec protection when initiating IP traffic, but that should respond to other nodes requesting IPsec protection when responding to IP traffic. This also allows a fallback to unencrypted IP traffic if the IPsec negotiation fails.
+* config/clear should contain exceptions to config/private that do not support IPsec protection. For example, these might include http://aws.amazon.com/route53[Amazon Route 53] (DNS), http://aws.amazon.com/elasticloadbalancing[Elastic Load Balancing,] or http://aws.amazon.com/rds[Amazon RDS]. Networks that aren’t listed in config/private are not IPsec protected and should not be added here.
+* oe-cert.conf is the configuration file for Libreswan. Typically you do not have to edit it. For more information, see the https://libreswan.org/man/ipsec.conf.5.html[Libreswan documentation].
+
+=== Step 4. (Optional) Launch an EC2 instance for testing 
+
+Now that you’ve deployed the IPsec environment, you can start launching EC2 instances. From the Amazon EC2 console, https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/launching-instance.html[follow the steps for launching an instance using the Launch Instance Wizard]. This Quick Start supports Red Hat Enterprise Linux (RHEL), Amazon Linux 2, and CentOS.
+
+*Note* For steps or details that that aren’t explicitly mentioned here, use the default values or your desired configuration. For step-by-step instructions, see the https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/launching-instance.html[Amazon EC2 documentation].
+
+[arabic]
+. On the *Configure Instance Details* page, select the IAM role that the Quick Start has already configured. It has the pattern Ec2IPsec-\{stackname}.
+
+[#postdeploy2]
+.Selecting a role in the Launch Instance Wizard
+image::../docs/deployment_guide/images/image3.png[Postdeploy]
+
+[arabic, start=2]
+. If you are using RHEL or CentOS (64-bit) as your Amazon Machine Image (AMI): Expand *Advanced Details*, choose *User data as text,* and activate AWS Systems Manager Agent (SSM Agent) by providing the following string. (Skip this step for Amazon Linux 2.)
+
+#!/bin/bash
+
+sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+
+sudo systemctl start amazon-ssm-agent
+
+[#postdeploy3]
+.Activating SSM Agent
+image::../docs/deployment_guide/images/image5.png[Postdeploy]
+
+[arabic, start=3]
+. On the *Add Tags* page, set the tag name to IPSec with the value todo. This is the identifier that triggers the installation and management of IPsec on the instance.
+
+[#postdeploy4]
+.Setting the IPsec tag
+image::../docs/deployment_guide/images/image6.png[Postdeploy]
+
+[arabic, start=4]
+. On the *Configure Security Group* page, allow ESP (protocol 50) and IKE (UDP 500) for your network (for example, 172.31.0.0/16). Enter these values as shown in Figure 7.
+
+[#postdeploy5]
+.Defining a security group for IPSec communication
+image::../docs/deployment_guide/images/image7.png[Postdeploy]
+
+After a few minutes, the value of the IPSec instance tag will change to enabled, indicating that the instance has been set up successfully.
+
+[#postdeploy6]
+.Tags overview of IPsec-enabled instance
+image::../docs/deployment_guide/images/image8.png[Postdeploy]
+
+=== Step 5. (Optional) Test the connection on the EC2 instance 
+
+To test the connection, you can log in to the EC2 instance and ping one of the hosts in your network. This will trigger the IPsec connection, and you should get data similar to the following:
+
+$ ping 172.31.1.26
+
+PING 172.31.1.26 (172.31.1.26) 56(84) bytes of data.
+
+64 bytes from 172.31.1.26: icmp_seq=2 ttl=255 time=0.722 ms
+
+64 bytes from 172.31.1.26: icmp_seq=3 ttl=255 time=0.483 ms
+
+To see a list of IPsec tunnels, run the following command:
+
+sudo ipsec whack --trafficstatus
+
+The command displays output similar to the following:
+
+[#postdeploy7]
+.Viewing IPsec tunnels
+image::../docs/deployment_guide/images/image9.png[Postdeploy]
+
+=== Operations
+
+==== Changing your configuration or installing it on running instances
+
+The Libreswan configuration is stored in files in an S3 bucket (specified as *ConfigSourcesS3Bucket* in CloudFormation stack output, as shown in Figure 3). If you want to change the configuration:
+
+[arabic]
+. Review and update the following files:
+
+[loweralpha]
+. oe-cert.conf, which stores the configuration for Libreswan.
+. clear, private, private-or-clear, and clear-or-private, which should contain your network ranges. (See link:#step-3.-configure-the-ipsec-network[step 3] for more information about these files.)
+
+[arabic, start=2]
+. Change the tag for the IPsec instance to IPSec:todo.
+. *Stop* and *Start* (don’t reboot) the instance. This sequence will retrigger the setup of the instance.
+
+[#postdeploy8]
+.Starting and stopping EC2 instances
+image::../docs/deployment_guide/images/image10.png[Postdeploy]
+
+If you prefer not to stop and restart the instance, you can call the IPSecSetup Lambda function by using a test JSON event in the following format:
+
+----
+\{
+
+    "detail": \{
+
+        "instance-id": "YOUR_INSTANCE_ID"
+
+    }
+
+}
+----
+
+[#postdeploy9]
+.Provisioning IPsec through a Lambda test event
+image::../docs/deployment_guide/images/image11.png[Postdeploy]
+
+For more information about creating test events, see the https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html[AWS Lambda documentation].
+
+==== Monitoring your IPsec environment 
+
+This Quick Start automatically sets up IPsec and IKE metrics and Amazon SNS alarms in case of errors. To monitor your IPsec environment, you can use Amazon CloudWatch and view metrics for active IPsec sessions, IKE/ESP errors, and connection shunts, as shown in Figure 12.
+
+[#postdeploy10]
+.Overview of IPsec-related CloudWatch metrics
+image::../docs/deployment_guide/images/image12.png[Postdeploy]
+
+There are two SNS topics and alarms configured for IPsec setup or certificate re-enrollment failures. You will see an alarm and an SNS message. Your administrator should subscribe to notifications so that you can react quickly. If you receive an alarm, follow the troubleshotting tips in the next section.
+
+[#postdeploy11]
+.Overview of IPsec-related CloudWatch alarms
+image::../docs/deployment_guide/images/image13.png[Postdeploy]
