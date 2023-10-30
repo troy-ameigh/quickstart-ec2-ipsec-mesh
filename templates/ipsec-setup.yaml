@@ -238,7 +238,7 @@ Resources:
       FunctionName: !Sub "CopyZipsFunction-${AWS::StackName}"
       Description: Copies objects from a source S3 bucket to a destination
       Handler: index.handler
-      Runtime: python3.6
+      Runtime: python3.9
       #      Role: !GetAtt 'CopyZipsRole.Arn'
       Role: !Join
          - ''
@@ -352,7 +352,7 @@ Resources:
       FunctionName: !Sub "CA-initialize-${AWS::StackName}"
       Description: Generates CA keys
       Handler: ca_initialize_lambda_function.lambda_handler
-      Runtime: python3.6
+      Runtime: python3.9
       Role: !GetAtt CaGenerateRole.Arn
       Timeout: 60
       Code:
@@ -560,6 +560,13 @@ Resources:
 
   UserKmsKey:
     Type: "AWS::KMS::Key"
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [ EIAMPolicyResourceWildcard ]
+          ignore_reasons:
+            EIAMPolicyResourceWildcard: >-
+              By Design.
     DependsOn:
       - CaLambdaRole
       - Ec2Role
@@ -610,7 +617,7 @@ Resources:
     Properties:
       FunctionName: !Sub "GenerateCertificate-${AWS::StackName}"
       Handler: generate_certifcate_lambda_function.lambda_handler
-      Runtime: python3.6
+      Runtime: python3.9
       Code:
         S3Bucket: !If [CreateQSHelpers, !Ref 'ResS3ConfigsBucket', !Ref 'QSS3BucketName']
         S3Key: !Sub '${QSS3KeyPrefix}functions/packages/generate_certifcate_lambda_function/generate_certifcate_lambda_function.zip'
@@ -643,7 +650,7 @@ Resources:
     Properties:
       FunctionName: !Sub "IPSecSetup-${AWS::StackName}"
       Handler: ipsec_setup_lambda_function.lambda_handler
-      Runtime: python3.6
+      Runtime: python3.9
       Code:
         S3Bucket:  !If [CreateQSHelpers, !Ref 'ResS3ConfigsBucket', !Ref 'QSS3BucketName']
         S3Key: !Sub '${QSS3KeyPrefix}functions/packages/ipsec_setup_lambda_function/ipsec_setup_lambda_function.zip'
@@ -672,7 +679,7 @@ Resources:
     Properties:
       FunctionName: !Sub "ReenrollCertificate-${AWS::StackName}"
       Handler: enroll_cert_lambda_function.lambda_handler
-      Runtime: python3.6
+      Runtime: python3.9
       Code:
         S3Bucket:  !If [CreateQSHelpers, !Ref 'ResS3ConfigsBucket', !Ref 'QSS3BucketName']
         S3Key: !Sub '${QSS3KeyPrefix}functions/packages/enroll_cert_lambda_function/enroll_cert_lambda_function.zip'
