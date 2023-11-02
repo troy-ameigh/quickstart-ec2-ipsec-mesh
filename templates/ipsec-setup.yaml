@@ -209,7 +209,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
         - PolicyName: lambda-copier
@@ -220,15 +220,15 @@ Resources:
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource: !If
                    - CreateQSHelpers
-                   - !Sub 'arn:aws:s3:::${ResS3ConfigsBucket}/${QSS3KeyPrefix}*'
-                   - !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                   - !Sub 'arn:${AWS::Partition}:s3:::${ResS3ConfigsBucket}/${QSS3KeyPrefix}*'
+                   - !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
 
   CopyZipsFunction:
     DependsOn:
@@ -242,7 +242,7 @@ Resources:
       #      Role: !GetAtt 'CopyZipsRole.Arn'
       Role: !Join
          - ''
-         - - !Sub "arn:aws:iam::${AWS::AccountId}:role/"
+         - - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/"
            - !Sub "CopyZipsRole-${AWS::StackName}"
       Timeout: 240
       Code:
@@ -300,6 +300,13 @@ Resources:
   CaGenerateRole:
     Condition: GenerateCA
     Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [ EIAMPolicyActionWildcard ]
+          ignore_reasons:
+            EIAMPolicyActionWildcard: >-
+              This action is set by design.
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -309,7 +316,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
         - PolicyName: lambda-cagenerate
@@ -386,13 +393,13 @@ Resources:
               - 'kms:Decrypt'
             Effect: 'Allow'
             Resource:
-                    - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/${AWS::StackName}-CA"
+                    - !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/${AWS::StackName}-CA"
           -
             Action:
               - 'kms:Encrypt'
             Effect: 'Allow'
             Resource:
-                    - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/${AWS::StackName}-USER"
+                    - !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/${AWS::StackName}-USER"
           -
             Action:
               - 'kms:GenerateRandom'
@@ -419,7 +426,7 @@ Resources:
             - 'kms:Decrypt'
             Effect: 'Allow'
             Resource:
-              - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/${AWS::StackName}-USER"
+              - !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/${AWS::StackName}-USER"
           -
             Action:
                     - 'cloudwatch:PutMetricData'
@@ -448,7 +455,7 @@ Resources:
                 - 'ec2:DeleteTags'
                 - 'ec2:CreateTags'
             Effect: 'Allow'
-            Resource:  'arn:aws:ec2:*:*:instance/*'
+            Resource:  'arn:${AWS::Partition}:ec2:*:*:instance/*'
 
   Ec2Role:
     DependsOn:
@@ -466,7 +473,7 @@ Resources:
               Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - Ref: Ec2IPSecInstancePolicy
-        - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+        - "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 
   RootInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
@@ -491,7 +498,7 @@ Resources:
                 Service: "lambda.amazonaws.com"
               Action: "sts:AssumeRole"
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
+        - 'arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute'
         - Ref: DecryptCaKeyEncryptUserP12Policy
 
   IPSecLambdaRole:
@@ -509,8 +516,8 @@ Resources:
                 Service: "lambda.amazonaws.com"
               Action: "sts:AssumeRole"
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess'
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:${AWS::Partition}:iam::aws:policy/AmazonEC2ReadOnlyAccess'
+        - 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - Ref: LambdaIPSecPolicy
 
   CaKmsKey:
@@ -528,7 +535,7 @@ Resources:
         - Sid: Allow administration of the key
           Effect: Allow
           Principal:
-            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
           Action: ['kms:Create*', 'kms:Describe*', 'kms:Enable*', 'kms:List*', 'kms:Put*',
             'kms:Update*', 'kms:Revoke*', 'kms:Disable*', 'kms:Get*', 'kms:Delete*',
             'kms:ScheduleKeyDeletion', 'kms:CancelKeyDeletion']
@@ -538,14 +545,14 @@ Resources:
           Principal:
             AWS: !Join
               - ''
-              - - !Sub "arn:aws:iam::${AWS::AccountId}:role/"
+              - - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/"
                 - !Sub "GenerateCertificate-${AWS::StackName}"
           Action: [ 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey']
           Resource: '*'
         - Sid: Allow initialization use
           Effect: Allow
           Principal:
-            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
           Action: ['kms:Encrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey']
           Resource: '*'
       Tags:
@@ -581,7 +588,7 @@ Resources:
         - Sid: Allow administration of the key
           Effect: Allow
           Principal:
-            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
           Action: ['kms:Create*', 'kms:Describe*', 'kms:Enable*', 'kms:List*', 'kms:Put*',
             'kms:Update*', 'kms:Revoke*', 'kms:Disable*', 'kms:Get*', 'kms:Delete*',
             'kms:ScheduleKeyDeletion', 'kms:CancelKeyDeletion']
@@ -719,7 +726,7 @@ Resources:
   PermissionForEventsIPSecSetup:
      Type: "AWS::Lambda::Permission"
      Properties:
-        FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:IPSecSetup-${AWS::StackName}"
+        FunctionName: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:IPSecSetup-${AWS::StackName}"
         Action: "lambda:InvokeFunction"
         Principal: "events.amazonaws.com"
         SourceArn:  !GetAtt eventIPSecSetup.Arn
@@ -741,7 +748,7 @@ Resources:
   PermissionForEventsEnrollCert:
      Type: "AWS::Lambda::Permission"
      Properties:
-        FunctionName: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ReenrollCertificate-${AWS::StackName}"
+        FunctionName: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:ReenrollCertificate-${AWS::StackName}"
         Action: "lambda:InvokeFunction"
         Principal: "events.amazonaws.com"
         SourceArn:  !GetAtt eventCertEnroll.Arn
