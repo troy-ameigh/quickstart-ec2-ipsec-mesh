@@ -209,7 +209,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
         - PolicyName: lambda-copier
@@ -316,7 +316,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: /
       Policies:
         - PolicyName: lambda-cagenerate
@@ -383,6 +383,13 @@ Resources:
 
   DecryptCaKeyEncryptUserP12Policy:
     Type: "AWS::IAM::ManagedPolicy"
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [ EIAMPolicyResourceWildcard ]
+          ignore_reasons:
+            EIAMPolicyResourceWildcard: >-
+              By Design.
     Properties:
       ManagedPolicyName: !Sub "DecryptCaKeyEncryptP12Pwd-${AWS::StackName}"
       PolicyDocument:
@@ -416,6 +423,13 @@ Resources:
     DependsOn:
         - generateCertificateBundle
     Type: "AWS::IAM::ManagedPolicy"
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [ EIAMPolicyResourceWildcard ]
+          ignore_reasons:
+            EIAMPolicyResourceWildcard: >-
+              By Design.
     Properties:
       ManagedPolicyName: !Sub "Ec2IPsec-${AWS::StackName}Instance"
       PolicyDocument:
@@ -435,6 +449,13 @@ Resources:
 
   LambdaIPSecPolicy:
     Type: "AWS::IAM::ManagedPolicy"
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [ EIAMPolicyResourceWildcard ]
+          ignore_reasons:
+            EIAMPolicyResourceWildcard: >-
+              By Design.
     Properties:
       ManagedPolicyName: !Sub "LambdaIPSec-${AWS::StackName}"
       PolicyDocument:
@@ -473,7 +494,7 @@ Resources:
               Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - Ref: Ec2IPSecInstancePolicy
-        - "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 
   RootInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
@@ -498,7 +519,7 @@ Resources:
                 Service: "lambda.amazonaws.com"
               Action: "sts:AssumeRole"
       ManagedPolicyArns:
-        - 'arn:${AWS::Partition}:iam::aws:policy/AWSLambdaExecute'
+        - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
         - Ref: DecryptCaKeyEncryptUserP12Policy
 
   IPSecLambdaRole:
@@ -516,14 +537,21 @@ Resources:
                 Service: "lambda.amazonaws.com"
               Action: "sts:AssumeRole"
       ManagedPolicyArns:
-        - 'arn:${AWS::Partition}:iam::aws:policy/AmazonEC2ReadOnlyAccess'
-        - 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
         - Ref: LambdaIPSecPolicy
 
   CaKmsKey:
     DependsOn:
       - CaLambdaRole
     Type: "AWS::KMS::Key"
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [ EIAMPolicyResourceWildcard ]
+          ignore_reasons:
+            EIAMPolicyResourceWildcard: >-
+              By Design.
     Properties:
       Description: Protects the CA key
       Enabled: true
